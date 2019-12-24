@@ -1,0 +1,49 @@
+{
+	"name": "ParquetComments",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "Curated/20191224/Comments.parquet",
+				"container": "lake"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "_CreationDate",
+				"type": "UTF8"
+			},
+			{
+				"name": "_Id",
+				"type": "INT64"
+			},
+			{
+				"name": "_PostId",
+				"type": "INT64"
+			},
+			{
+				"name": "_Score",
+				"type": "INT64"
+			},
+			{
+				"name": "_Text",
+				"type": "UTF8"
+			},
+			{
+				"name": "_UserDisplayName",
+				"type": "UTF8"
+			},
+			{
+				"name": "_UserId",
+				"type": "INT64"
+			}
+		]
+	}
+}
