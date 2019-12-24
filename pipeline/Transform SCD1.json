@@ -121,6 +121,9 @@
 				]
 			}
 		],
+		"folder": {
+			"name": "Transform"
+		},
 		"annotations": []
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
