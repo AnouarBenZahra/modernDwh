@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Cp Comments",
+				"name": "Cp Users",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -21,7 +21,7 @@
 					},
 					"sink": {
 						"type": "SqlDWSink",
-						"preCopyScript": "TRUNCATE TABLE dmt.DimComments",
+						"preCopyScript": "TRUNCATE TABLE dmt.Users",
 						"allowPolyBase": true,
 						"polyBaseSettings": {
 							"rejectValue": 0,
@@ -36,12 +36,22 @@
 						"mappings": [
 							{
 								"source": {
-									"name": "_Id",
+									"name": "_AccountId",
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "CommentId",
+									"name": "UserId",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"name": "_Reputation",
 									"type": "Int64"
+								},
+								"sink": {
+									"name": "Reputation",
+									"type": "Int32"
 								}
 							},
 							{
@@ -51,57 +61,77 @@
 								},
 								"sink": {
 									"name": "CreationDate",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"name": "_DisplayName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DisplayName",
 									"type": "String"
 								}
 							},
 							{
 								"source": {
-									"name": "_PostId",
-									"type": "Int64"
-								},
-								"sink": {
-									"name": "PostId",
-									"type": "Int64"
-								}
-							},
-							{
-								"source": {
-									"name": "_Score",
-									"type": "Int64"
-								},
-								"sink": {
-									"name": "Score",
-									"type": "Int64"
-								}
-							},
-							{
-								"source": {
-									"name": "_Text",
+									"name": "_LastAccessDate",
 									"type": "String"
 								},
 								"sink": {
-									"name": "Text",
+									"name": "LastAccessDate",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"name": "_WebsiteUrl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "WebsiteUrl",
 									"type": "String"
 								}
 							},
 							{
 								"source": {
-									"name": "_UserDisplayName",
+									"name": "_Location",
 									"type": "String"
 								},
 								"sink": {
-									"name": "UserDisplayName",
+									"name": "Location",
 									"type": "String"
 								}
 							},
 							{
 								"source": {
-									"name": "_UserId",
+									"name": "_UpVotes",
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "UserId",
+									"name": "UpVotes",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"name": "_DownVotes",
 									"type": "Int64"
+								},
+								"sink": {
+									"name": "DownVotes",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"name": "_ProfileImageUrl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ProfileImageUrl",
+									"type": "String"
 								}
 							}
 						]
@@ -109,13 +139,13 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "SynapseDboComment",
+						"referenceName": "SynapseDboUser",
 						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "SynapseDimComments",
+						"referenceName": "SynapseDimUser",
 						"type": "DatasetReference"
 					}
 				]
