@@ -29,12 +29,14 @@
 					},
 					"sink": {
 						"type": "SqlDWSink",
+						"preCopyScript": "TRUNCATE TABLE dbo.Comments",
 						"allowPolyBase": true,
 						"polyBaseSettings": {
 							"rejectValue": 0,
 							"rejectType": "value",
 							"useTypeDefault": true
-						}
+						},
+						"disableMetricsCollection": false
 					},
 					"enableStaging": false,
 					"translator": {
