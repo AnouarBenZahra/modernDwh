@@ -30,7 +30,82 @@
 						},
 						"disableMetricsCollection": false
 					},
-					"enableStaging": false
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "_Id",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "CommentId",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_CreationDate",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CreationDate",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_PostId",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "PostId",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_Score",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "Score",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_Text",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Text",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_UserDisplayName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "UserDisplayName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_UserId",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "UserId",
+									"type": "Int64"
+								}
+							}
+						]
+					}
 				},
 				"inputs": [
 					{
