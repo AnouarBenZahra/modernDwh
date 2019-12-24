@@ -1,0 +1,381 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "meetupADF"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/LoadXml - Generic')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "XML_StackOverflowDump",
+								"type": "DatasetReference"
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true
+							}
+						}
+					},
+					{
+						"name": "Filter - XML",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata').output.childItems",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@not(contains(item().name,'.gz'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach - XML Files",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filter - XML",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filter - XML').output.Value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "NTBK - XML 2 Parquet",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Shared/LoadXml-Parquet",
+										"baseParameters": {
+											"filename": {
+												"value": "@item().name",
+												"type": "Expression"
+											},
+											"parquetpath": {
+												"value": "@concat('/Curated/'\n,formatDateTime(utcnow(),'yyyyMMdd')\n,'/'\n,replace(item().name,'xml','parquet')\n)",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "AzureDatabricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/XML_StackOverflowDump')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/XML_StackOverflowDump')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ABFS_Lake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "StackOverflowDump",
+						"fileSystem": "lake"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ABFS_Lake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ABFS_Lake')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "https://meetuptunis.dfs.core.windows.net",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "**********"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LoadComments')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Cp- Comments",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": {
+										"value": "*.parquet",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink",
+								"allowPolyBase": true,
+								"polyBaseSettings": {
+									"rejectValue": 0,
+									"rejectType": "value",
+									"useTypeDefault": true
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "_Id",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_Id",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_CreationDate",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_CreationDate",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_PostId",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_PostId",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_Score",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_Score",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_Text",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_Text",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_UserDisplayName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_UserDisplayName",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_UserId",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_UserId",
+											"type": "Int64"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ParquetComments",
+								"type": "DatasetReference"
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SynapseDboComment",
+								"type": "DatasetReference"
+							}
+						]
+					}
+				],
+				"folder": {
+					"name": "LoadComments"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ParquetComments')]",
+				"[concat(variables('factoryId'), '/datasets/SynapseDboComment')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ParquetComments')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "Curated/20191224/Comments.parquet",
+						"container": "lake"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "_CreationDate",
+						"type": "UTF8"
+					},
+					{
+						"name": "_Id",
+						"type": "INT64"
+					},
+					{
+						"name": "_PostId",
+						"type": "INT64"
+					},
+					{
+						"name": "_Score",
+						"type": "INT64"
+					},
+					{
+						"name": "_Text",
+						"type": "UTF8"
+					},
+					{
+						"name": "_UserDisplayName",
+						"type": "UTF8"
+					},
+					{
+						"name": "_UserId",
+						"type": "INT64"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SynapseDboComment')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Comments"
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

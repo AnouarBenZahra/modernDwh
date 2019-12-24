@@ -1,0 +1,782 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "meetupADF"
+		},
+		"ABFS_Lake_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ABFS_Lake'"
+		},
+		"AzureBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+		},
+		"AzureDatabricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricks'"
+		},
+		"AzureSynapseAnalytics1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSynapseAnalytics1'"
+		},
+		"ABFS_Lake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://meetuptunis.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/COL - Comments')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "NBK - LoadComments",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/LoadComments"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"folder": {
+					"name": "Collecte"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/COL - Users')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "NBK - LoadUsers",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/LoadUsers"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"folder": {
+					"name": "Collecte"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LoadXml - Generic')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "XML_StackOverflowDump",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true
+							}
+						}
+					},
+					{
+						"name": "Filter - XML",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata').output.childItems",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@not(contains(item().name,'.gz'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach - XML Files",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filter - XML",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filter - XML').output.Value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "NTBK - XML 2 Parquet",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Shared/LoadXml-Parquet",
+										"baseParameters": {
+											"filename": {
+												"value": "@item().name",
+												"type": "Expression"
+											},
+											"parquetpath": {
+												"value": "@concat('/Curated/'\n,formatDateTime(utcnow(),'yyyyMMdd')\n,'/'\n,replace(item().name,'xml','parquet')\n)",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "AzureDatabricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/XML_StackOverflowDump')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Transform')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DFUser",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DFuser",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"srcUser": {},
+									"destUser": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "AzureBlobStorage1",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "lake"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DFuser')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapseAnalytics')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSynapseAnalytics1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SynapseDboUser')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "_AccountId",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_CreationDate",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_DisplayName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_DownVotes",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_Id",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_LastAccessDate",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_Location",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_ProfileImageUrl",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_Reputation",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_UpVotes",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_Views",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_WebsiteUrl",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Users"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSynapseAnalytics1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SynapseDimUser')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "UserId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "UserSk",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Reputation",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CreationDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "DisplayName",
+						"type": "varchar"
+					},
+					{
+						"name": "LastAccessDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "WebsiteUrl",
+						"type": "varchar"
+					},
+					{
+						"name": "Location",
+						"type": "varchar"
+					},
+					{
+						"name": "UpVotes",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "DownVotes",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProfileImageUrl",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dmt",
+					"table": "DimUser"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSynapseAnalytics1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/XML_StackOverflowDump')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ABFS_Lake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "StackOverflowDump",
+						"fileSystem": "lake"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ABFS_Lake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ABFS_Lake')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ABFS_Lake_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ABFS_Lake_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStorage1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://westeurope.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDatabricks_accessToken')]"
+					},
+					"existingClusterId": "1223-151257-knell686"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapseAnalytics1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSynapseAnalytics1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DFuser')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDboUser",
+								"type": "DatasetReference"
+							},
+							"name": "srcUser",
+							"typeProperties": {}
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDimUser",
+								"type": "DatasetReference"
+							},
+							"name": "destUser"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AlterRow"
+						}
+					],
+					"script": "\n\nsource(output(\n\t\t{_AccountId} as long,\n\t\t{_CreationDate} as string,\n\t\t{_DisplayName} as string,\n\t\t{_DownVotes} as long,\n\t\t{_Id} as long,\n\t\t{_LastAccessDate} as string,\n\t\t{_Location} as string,\n\t\t{_ProfileImageUrl} as string,\n\t\t{_Reputation} as long,\n\t\t{_UpVotes} as long,\n\t\t{_Views} as long,\n\t\t{_WebsiteUrl} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcUser\nsrcUser alterRow(upsertIf(true())) ~> AlterRow\nAlterRow sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk = {_AccountId},\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> destUser"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SynapseDboUser')]",
+				"[concat(variables('factoryId'), '/datasets/SynapseDimUser')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LoadComments')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Cp- Comments",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": {
+										"value": "*.parquet",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink",
+								"allowPolyBase": true,
+								"polyBaseSettings": {
+									"rejectValue": 0,
+									"rejectType": "value",
+									"useTypeDefault": true
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "_Id",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_Id",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_CreationDate",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_CreationDate",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_PostId",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_PostId",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_Score",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_Score",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_Text",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_Text",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_UserDisplayName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_UserDisplayName",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_UserId",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_UserId",
+											"type": "Int64"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ParquetComments",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SynapseDboComment",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"folder": {
+					"name": "LoadComments"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ParquetComments')]",
+				"[concat(variables('factoryId'), '/datasets/SynapseDboComment')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ParquetComments')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "Curated/20191224/Comments.parquet",
+						"container": "lake"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "_CreationDate",
+						"type": "UTF8"
+					},
+					{
+						"name": "_Id",
+						"type": "INT64"
+					},
+					{
+						"name": "_PostId",
+						"type": "INT64"
+					},
+					{
+						"name": "_Score",
+						"type": "INT64"
+					},
+					{
+						"name": "_Text",
+						"type": "UTF8"
+					},
+					{
+						"name": "_UserDisplayName",
+						"type": "UTF8"
+					},
+					{
+						"name": "_UserId",
+						"type": "INT64"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SynapseDboComment')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Comments"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSynapseAnalytics1')]"
+			]
+		}
+	]
+}
