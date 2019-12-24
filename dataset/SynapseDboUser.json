@@ -1,0 +1,72 @@
+{
+	"name": "SynapseDboUser",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSynapseAnalytics1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "_AccountId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_CreationDate",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_DisplayName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_DownVotes",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_Id",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_LastAccessDate",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_Location",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_ProfileImageUrl",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_Reputation",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_UpVotes",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_Views",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_WebsiteUrl",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Users"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

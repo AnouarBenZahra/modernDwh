@@ -1,0 +1,71 @@
+{
+	"name": "SynapseDimUser",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSynapseAnalytics1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "UserId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "UserSk",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Reputation",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "CreationDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "DisplayName",
+				"type": "varchar"
+			},
+			{
+				"name": "LastAccessDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "WebsiteUrl",
+				"type": "varchar"
+			},
+			{
+				"name": "Location",
+				"type": "varchar"
+			},
+			{
+				"name": "UpVotes",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "DownVotes",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ProfileImageUrl",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dmt",
+			"table": "DimUser"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

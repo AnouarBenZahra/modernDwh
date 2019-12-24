@@ -1,0 +1,32 @@
+{
+	"name": "DFuser",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "SynapseDboUser",
+						"type": "DatasetReference"
+					},
+					"name": "srcUser"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SynapseDimUser",
+						"type": "DatasetReference"
+					},
+					"name": "destUser"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterRow"
+				}
+			],
+			"script": "\n\nsource(output(\n\t\t{_AccountId} as long,\n\t\t{_CreationDate} as string,\n\t\t{_DisplayName} as string,\n\t\t{_DownVotes} as long,\n\t\t{_Id} as long,\n\t\t{_LastAccessDate} as string,\n\t\t{_Location} as string,\n\t\t{_ProfileImageUrl} as string,\n\t\t{_Reputation} as long,\n\t\t{_UpVotes} as long,\n\t\t{_Views} as long,\n\t\t{_WebsiteUrl} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcUser\nsrcUser alterRow(upsertIf(true())) ~> AlterRow\nAlterRow sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk = {_AccountId},\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> destUser"
+		}
+	}
+}
