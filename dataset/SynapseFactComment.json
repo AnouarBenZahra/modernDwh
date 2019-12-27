@@ -9,39 +9,17 @@
 		"type": "AzureSqlDWTable",
 		"schema": [
 			{
-				"name": "CommentId",
+				"name": "IdUser",
 				"type": "bigint",
 				"precision": 19
 			},
 			{
-				"name": "CommentSk",
+				"name": "IdComment",
 				"type": "bigint",
 				"precision": 19
 			},
 			{
-				"name": "CreationDate",
-				"type": "nvarchar"
-			},
-			{
-				"name": "PostId",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "Score",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "Text",
-				"type": "nvarchar"
-			},
-			{
-				"name": "UserDisplayName",
-				"type": "nvarchar"
-			},
-			{
-				"name": "UserId",
+				"name": "PostCount",
 				"type": "bigint",
 				"precision": 19
 			}
