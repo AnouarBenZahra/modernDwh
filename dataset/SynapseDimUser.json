@@ -19,6 +19,11 @@
 				"precision": 10
 			},
 			{
+				"name": "AccountId",
+				"type": "int",
+				"precision": 10
+			},
+			{
 				"name": "Reputation",
 				"type": "int",
 				"precision": 10
