@@ -1,0 +1,47 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "meetupADF"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/DFComments')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDboComment",
+								"type": "DatasetReference"
+							},
+							"name": "srcComments"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDimComments",
+								"type": "DatasetReference"
+							},
+							"name": "dstComment"
+						}
+					],
+					"transformations": [],
+					"script": "\n\nsource(output(\n\t\t{_Id} as long,\n\t\t{_CreationDate} as string,\n\t\t{_PostId} as long,\n\t\t{_Score} as long,\n\t\t{_Text} as string,\n\t\t{_UserDisplayName} as string,\n\t\t{_UserId} as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcComments\nsrcComments sink(input(\n\t\tCommentId as long,\n\t\tCommentSk as long,\n\t\tCreationDate as string,\n\t\tPostId as long,\n\t\tScore as long,\n\t\tText as string,\n\t\tUserDisplayName as string,\n\t\tUserId as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tkeys:['_Id'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tCommentSk = {_Id},\n\t\tCreationDate = {_CreationDate},\n\t\tPostId = {_PostId},\n\t\tScore = {_Score},\n\t\tText = {_Text},\n\t\tUserDisplayName = {_UserDisplayName},\n\t\tUserId = {_UserId}\n\t)) ~> dstComment"
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
