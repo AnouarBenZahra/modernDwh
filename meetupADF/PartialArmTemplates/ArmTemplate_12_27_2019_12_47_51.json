@@ -1,0 +1,340 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "meetupADF"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/LoadComments')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Cp- Comments",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": {
+										"value": "*.parquet",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink",
+								"preCopyScript": "TRUNCATE TABLE dbo.Comments",
+								"allowPolyBase": true,
+								"polyBaseSettings": {
+									"rejectValue": 0,
+									"rejectType": "value",
+									"useTypeDefault": true
+								},
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "_Id",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_Id",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_CreationDate",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_CreationDate",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_PostId",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_PostId",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_Score",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_Score",
+											"type": "Int64"
+										}
+									},
+									{
+										"source": {
+											"name": "_Text",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_Text",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_UserDisplayName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "_UserDisplayName",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "_UserId",
+											"type": "Int64"
+										},
+										"sink": {
+											"name": "_UserId",
+											"type": "Int64"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ParquetComments",
+								"type": "DatasetReference"
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SynapseDboComment",
+								"type": "DatasetReference"
+							}
+						]
+					}
+				],
+				"folder": {
+					"name": "LoadComments"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Transform SCD2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DFUser",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DFuser",
+								"type": "DataFlowReference"
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "AzureBlobStorage1",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "lake"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Transform"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DFuser')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SynapseDimComments')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "UserId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "UserSk",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Reputation",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CreationDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "DisplayName",
+						"type": "varchar"
+					},
+					{
+						"name": "LastAccessDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "WebsiteUrl",
+						"type": "varchar"
+					},
+					{
+						"name": "Location",
+						"type": "varchar"
+					},
+					{
+						"name": "UpVotes",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "DownVotes",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProfileImageUrl",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dmt",
+					"table": "DimComments"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DFuser')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDboUser",
+								"type": "DatasetReference"
+							},
+							"name": "srcUser"
+						},
+						{
+							"dataset": {
+								"referenceName": "SynapseDimUser",
+								"type": "DatasetReference"
+							},
+							"name": "DimUser"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDimUser",
+								"type": "DatasetReference"
+							},
+							"name": "UpdateDestDimUser"
+						},
+						{
+							"dataset": {
+								"referenceName": "SynapseDimUser",
+								"type": "DatasetReference"
+							},
+							"name": "InsertDestDimUser"
+						},
+						{
+							"dataset": {
+								"referenceName": "SynapseDimUser",
+								"type": "DatasetReference"
+							},
+							"name": "dstUser"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ConditionalSplit"
+						},
+						{
+							"name": "Join"
+						},
+						{
+							"name": "AlterRow"
+						},
+						{
+							"name": "AlterRowUpsert"
+						}
+					],
+					"script": "\n\nsource(output(\n\t\t{_AccountId} as long,\n\t\t{_CreationDate} as string,\n\t\t{_DisplayName} as string,\n\t\t{_DownVotes} as long,\n\t\t{_Id} as long,\n\t\t{_LastAccessDate} as string,\n\t\t{_Location} as string,\n\t\t{_ProfileImageUrl} as string,\n\t\t{_Reputation} as long,\n\t\t{_UpVotes} as long,\n\t\t{_Views} as long,\n\t\t{_WebsiteUrl} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcUser\nsource(output(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> DimUser\nJoin split(DisplayName!={_DisplayName}\r\n&&\r\n{_Id}==UserId,\n\tUserId=={_Id} && {_Location} != Location,\n\tdisjoint: false) ~> ConditionalSplit@(SCD1, SCD2, ELSE)\nsrcUser, DimUser join({_Id} == UserId,\n\tjoinType:'outer',\n\tbroadcast: 'none')~> Join\nConditionalSplit@SCD1 alterRow(updateIf(true())) ~> AlterRow\nConditionalSplit@SCD2 alterRow(upsertIf(true())) ~> AlterRowUpsert\nAlterRow sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk = {_AccountId},\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> UpdateDestDimUser\nAlterRowUpsert sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk,\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> InsertDestDimUser\nConditionalSplit@ELSE sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk,\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> dstUser"
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
