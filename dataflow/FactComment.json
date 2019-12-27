@@ -19,13 +19,24 @@
 					"name": "DimComments"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SynapseFactComment",
+						"type": "DatasetReference"
+					},
+					"name": "Fact"
+				}
+			],
 			"transformations": [
 				{
 					"name": "Join"
+				},
+				{
+					"name": "Aggregate"
 				}
 			],
-			"script": "\n\nsource(output(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tAccountId as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> DimUser\nsource(output(\n\t\tCommentId as long,\n\t\tCommentSk as long,\n\t\tCreationDate as string,\n\t\tPostId as long,\n\t\tScore as long,\n\t\tText as string,\n\t\tUserDisplayName as string,\n\t\tUserId as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> DimComments\nDimUser, DimComments join(ERROR_FUNCTION('') == ERROR_FUNCTION(''),\n\tjoinType:'left',\n\tbroadcast: 'none')~> Join"
+			"script": "\n\nsource(output(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tAccountId as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> DimUser\nsource(output(\n\t\tCommentId as long,\n\t\tCommentSk as long,\n\t\tCreationDate as string,\n\t\tPostId as long,\n\t\tScore as long,\n\t\tText as string,\n\t\tUserDisplayName as string,\n\t\tUserId as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> DimComments\nDimUser, DimComments join(UserSk == DimComments@UserId,\n\tjoinType:'left',\n\tbroadcast: 'none')~> Join\nJoin aggregate(groupBy(UserSk,\n\t\tCommentSk),\n\tPostCount = count(1)) ~> Aggregate\nAggregate sink(input(\n\t\tIdUser as long,\n\t\tIdComment as long,\n\t\tPostCount as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tIdUser = UserSk,\n\t\tIdComment = CommentSk,\n\t\tPostCount\n\t)) ~> Fact"
 		}
 	}
 }
