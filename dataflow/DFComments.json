@@ -1,0 +1,12 @@
+{
+	"name": "DFComments",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [],
+			"sinks": [],
+			"transformations": [],
+			"script": "\n"
+		}
+	}
+}
