@@ -28,7 +28,14 @@
 							"useTypeDefault": true
 						}
 					},
-					"enableStaging": false,
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "AzureBlobStorage1",
+							"type": "LinkedServiceReference"
+						},
+						"path": "lake"
+					},
 					"translator": {
 						"type": "TabularTranslator",
 						"mappings": [
