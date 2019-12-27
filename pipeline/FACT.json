@@ -19,6 +19,13 @@
 						"referenceName": "FactComment",
 						"type": "DataFlowReference"
 					},
+					"staging": {
+						"linkedService": {
+							"referenceName": "AzureBlobStorage1",
+							"type": "LinkedServiceReference"
+						},
+						"folderPath": "lake"
+					},
 					"compute": {
 						"coreCount": 8,
 						"computeType": "General"
