@@ -3,10 +3,30 @@
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
-			"sources": [],
-			"sinks": [],
-			"transformations": [],
-			"script": "\n"
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "SynapseDboComment",
+						"type": "DatasetReference"
+					},
+					"name": "srcComments"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SynapseDimComments",
+						"type": "DatasetReference"
+					},
+					"name": "dstComment"
+				}
+			],
+			"transformations": [
+				{
+					"name": "upsert"
+				}
+			],
+			"script": "\n\nsource(output(\n\t\t{_Id} as long,\n\t\t{_CreationDate} as string,\n\t\t{_PostId} as long,\n\t\t{_Score} as long,\n\t\t{_Text} as string,\n\t\t{_UserDisplayName} as string,\n\t\t{_UserId} as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcComments\nsrcComments alterRow(upsertIf(true())) ~> upsert\nupsert sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tformat: 'table',\n\tstaged: true) ~> dstComment"
 		}
 	}
 }

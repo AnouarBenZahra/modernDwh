@@ -7,7 +7,40 @@
 		},
 		"annotations": [],
 		"type": "AzureSqlDWTable",
-		"schema": [],
+		"schema": [
+			{
+				"name": "_Id",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_CreationDate",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_PostId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_Score",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "_Text",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_UserDisplayName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_UserId",
+				"type": "bigint",
+				"precision": 19
+			}
+		],
 		"typeProperties": {
 			"schema": "dbo",
 			"table": "Comments"
