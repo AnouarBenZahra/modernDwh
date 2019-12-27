@@ -365,7 +365,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Transform SCD2')]",
+			"name": "[concat(parameters('factoryName'), '/Transform User')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -416,6 +416,58 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DFuser')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TransformComment')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DFComments",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DFComments",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"srcComments": {},
+									"dstComment": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "AzureBlobStorage1",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "lake"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Transform"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DFComments')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
 			]
 		},
@@ -502,7 +554,40 @@
 				},
 				"annotations": [],
 				"type": "AzureSqlDWTable",
-				"schema": [],
+				"schema": [
+					{
+						"name": "_Id",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_CreationDate",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_PostId",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_Score",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "_Text",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_UserDisplayName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_UserId",
+						"type": "bigint",
+						"precision": 19
+					}
+				],
 				"typeProperties": {
 					"schema": "dbo",
 					"table": "Comments"
@@ -601,57 +686,41 @@
 				"type": "AzureSqlDWTable",
 				"schema": [
 					{
-						"name": "UserId",
-						"type": "int",
-						"precision": 10
+						"name": "CommentId",
+						"type": "bigint",
+						"precision": 19
 					},
 					{
-						"name": "UserSk",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Reputation",
-						"type": "int",
-						"precision": 10
+						"name": "CommentSk",
+						"type": "bigint",
+						"precision": 19
 					},
 					{
 						"name": "CreationDate",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
+						"type": "nvarchar"
 					},
 					{
-						"name": "DisplayName",
-						"type": "varchar"
+						"name": "PostId",
+						"type": "bigint",
+						"precision": 19
 					},
 					{
-						"name": "LastAccessDate",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
+						"name": "Score",
+						"type": "bigint",
+						"precision": 19
 					},
 					{
-						"name": "WebsiteUrl",
-						"type": "varchar"
+						"name": "Text",
+						"type": "nvarchar"
 					},
 					{
-						"name": "Location",
-						"type": "varchar"
+						"name": "UserDisplayName",
+						"type": "nvarchar"
 					},
 					{
-						"name": "UpVotes",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "DownVotes",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "ProfileImageUrl",
-						"type": "varchar"
+						"name": "UserId",
+						"type": "bigint",
+						"precision": 19
 					}
 				],
 				"typeProperties": {
@@ -823,6 +892,48 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DFComments')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDboComment",
+								"type": "DatasetReference"
+							},
+							"name": "srcComments",
+							"typeProperties": {}
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "SynapseDimComments",
+								"type": "DatasetReference"
+							},
+							"name": "dstComment"
+						}
+					],
+					"transformations": [
+						{
+							"name": "upsert"
+						},
+						{
+							"name": "DerivedColumnSk"
+						}
+					],
+					"script": "\n\nsource(output(\n\t\t{_Id} as long,\n\t\t{_CreationDate} as string,\n\t\t{_PostId} as long,\n\t\t{_Score} as long,\n\t\t{_Text} as string,\n\t\t{_UserDisplayName} as string,\n\t\t{_UserId} as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcComments\nDerivedColumnSk alterRow(upsertIf(true())) ~> upsert\nsrcComments derive(CommentSK = toInteger(replace(toString(currentDate()), '-', ''))) ~> DerivedColumnSk\nupsert sink(input(\n\t\tCommentId as long,\n\t\tCommentSk as long,\n\t\tCreationDate as string,\n\t\tPostId as long,\n\t\tScore as long,\n\t\tText as string,\n\t\tUserDisplayName as string,\n\t\tUserId as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['_Id'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tCommentId = {_Id},\n\t\tCommentSk = CommentSK,\n\t\tCreationDate = {_CreationDate},\n\t\tPostId = {_PostId},\n\t\tScore = {_Score},\n\t\tText = {_Text},\n\t\tUserDisplayName = {_UserDisplayName},\n\t\tUserId = {_UserId}\n\t)) ~> dstComment"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SynapseDboComment')]",
+				"[concat(variables('factoryId'), '/datasets/SynapseDimComments')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DFuser')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -882,9 +993,12 @@
 						},
 						{
 							"name": "AlterRowUpsert"
+						},
+						{
+							"name": "DerivedColumnUserSK"
 						}
 					],
-					"script": "\n\nsource(output(\n\t\t{_AccountId} as long,\n\t\t{_CreationDate} as string,\n\t\t{_DisplayName} as string,\n\t\t{_DownVotes} as long,\n\t\t{_Id} as long,\n\t\t{_LastAccessDate} as string,\n\t\t{_Location} as string,\n\t\t{_ProfileImageUrl} as string,\n\t\t{_Reputation} as long,\n\t\t{_UpVotes} as long,\n\t\t{_Views} as long,\n\t\t{_WebsiteUrl} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcUser\nsource(output(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> DimUser\nJoin split(DisplayName!={_DisplayName}\r\n&&\r\n{_Id}==UserId,\n\tUserId=={_Id} && {_Location} != Location,\n\tdisjoint: false) ~> ConditionalSplit@(SCD1, SCD2, ELSE)\nsrcUser, DimUser join({_Id} == UserId,\n\tjoinType:'outer',\n\tbroadcast: 'none')~> Join\nConditionalSplit@SCD1 alterRow(updateIf(true())) ~> AlterRow\nConditionalSplit@SCD2 alterRow(upsertIf(true())) ~> AlterRowUpsert\nAlterRow sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk = {_AccountId},\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> UpdateDestDimUser\nAlterRowUpsert sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk,\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> InsertDestDimUser\nConditionalSplit@ELSE sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk,\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> dstUser"
+					"script": "\n\nsource(output(\n\t\t{_AccountId} as long,\n\t\t{_CreationDate} as string,\n\t\t{_DisplayName} as string,\n\t\t{_DownVotes} as long,\n\t\t{_Id} as long,\n\t\t{_LastAccessDate} as string,\n\t\t{_Location} as string,\n\t\t{_ProfileImageUrl} as string,\n\t\t{_Reputation} as long,\n\t\t{_UpVotes} as long,\n\t\t{_Views} as long,\n\t\t{_WebsiteUrl} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> srcUser\nsource(output(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table',\n\tstaged: false) ~> DimUser\nDerivedColumnUserSK split(DisplayName!={_DisplayName}\r\n&&\r\n{_Id}==UserId,\n\tUserId=={_Id} && {_Location} != Location,\n\tdisjoint: false) ~> ConditionalSplit@(SCD1, SCD2, ELSE)\nsrcUser, DimUser join({_Id} == UserId,\n\tjoinType:'outer',\n\tbroadcast: 'none')~> Join\nConditionalSplit@SCD1 alterRow(updateIf(true())) ~> AlterRow\nConditionalSplit@SCD2 alterRow(upsertIf(true())) ~> AlterRowUpsert\nJoin derive(userSK = replace(toString(currentDate()), '-', '')) ~> DerivedColumnUserSK\nAlterRow sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk = {_AccountId},\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> UpdateDestDimUser\nAlterRowUpsert sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['UserId'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk = ConditionalSplit@SCD2@UserSk,\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> InsertDestDimUser\nConditionalSplit@ELSE sink(input(\n\t\tUserId as integer,\n\t\tUserSk as integer,\n\t\tReputation as integer,\n\t\tCreationDate as timestamp,\n\t\tDisplayName as string,\n\t\tLastAccessDate as timestamp,\n\t\tWebsiteUrl as string,\n\t\tLocation as string,\n\t\tUpVotes as integer,\n\t\tDownVotes as integer,\n\t\tProfileImageUrl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tUserId = {_Id},\n\t\tUserSk = ConditionalSplit@ELSE@UserSk,\n\t\tReputation = {_Reputation},\n\t\tCreationDate = {_CreationDate},\n\t\tDisplayName = {_DisplayName},\n\t\tLastAccessDate = {_LastAccessDate},\n\t\tWebsiteUrl = {_WebsiteUrl},\n\t\tLocation = {_Location},\n\t\tUpVotes = {_UpVotes},\n\t\tDownVotes = {_DownVotes},\n\t\tProfileImageUrl = {_ProfileImageUrl}\n\t)) ~> dstUser"
 				}
 			},
 			"dependsOn": [
