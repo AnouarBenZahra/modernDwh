@@ -9,57 +9,41 @@
 		"type": "AzureSqlDWTable",
 		"schema": [
 			{
-				"name": "UserId",
-				"type": "int",
-				"precision": 10
+				"name": "CommentId",
+				"type": "bigint",
+				"precision": 19
 			},
 			{
-				"name": "UserSk",
-				"type": "int",
-				"precision": 10
-			},
-			{
-				"name": "Reputation",
-				"type": "int",
-				"precision": 10
+				"name": "CommentSk",
+				"type": "bigint",
+				"precision": 19
 			},
 			{
 				"name": "CreationDate",
-				"type": "datetime",
-				"precision": 23,
-				"scale": 3
+				"type": "nvarchar"
 			},
 			{
-				"name": "DisplayName",
-				"type": "varchar"
+				"name": "PostId",
+				"type": "bigint",
+				"precision": 19
 			},
 			{
-				"name": "LastAccessDate",
-				"type": "datetime",
-				"precision": 23,
-				"scale": 3
+				"name": "Score",
+				"type": "bigint",
+				"precision": 19
 			},
 			{
-				"name": "WebsiteUrl",
-				"type": "varchar"
+				"name": "Text",
+				"type": "nvarchar"
 			},
 			{
-				"name": "Location",
-				"type": "varchar"
+				"name": "UserDisplayName",
+				"type": "nvarchar"
 			},
 			{
-				"name": "UpVotes",
-				"type": "int",
-				"precision": 10
-			},
-			{
-				"name": "DownVotes",
-				"type": "int",
-				"precision": 10
-			},
-			{
-				"name": "ProfileImageUrl",
-				"type": "varchar"
+				"name": "UserId",
+				"type": "bigint",
+				"precision": 19
 			}
 		],
 		"typeProperties": {
