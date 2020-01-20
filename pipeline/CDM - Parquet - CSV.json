@@ -214,42 +214,12 @@
 						"mappings": [
 							{
 								"source": {
-									"name": "_AccountId",
-									"type": "Int64"
-								},
-								"sink": {
-									"name": "_AccountId",
-									"type": "Int64"
-								}
-							},
-							{
-								"source": {
 									"name": "_CreationDate",
 									"type": "String"
 								},
 								"sink": {
 									"name": "_CreationDate",
 									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"name": "_DisplayName",
-									"type": "String"
-								},
-								"sink": {
-									"name": "_DisplayName",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"name": "_DownVotes",
-									"type": "Int64"
-								},
-								"sink": {
-									"name": "_DownVotes",
-									"type": "Int64"
 								}
 							},
 							{
@@ -264,72 +234,42 @@
 							},
 							{
 								"source": {
-									"name": "_LastAccessDate",
-									"type": "String"
-								},
-								"sink": {
-									"name": "_LastAccessDate",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"name": "_Location",
-									"type": "String"
-								},
-								"sink": {
-									"name": "_Location",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"name": "_ProfileImageUrl",
-									"type": "String"
-								},
-								"sink": {
-									"name": "_ProfileImageUrl",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"name": "_Reputation",
+									"name": "_PostId",
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_Reputation",
+									"name": "_PostId",
 									"type": "Int64"
 								}
 							},
 							{
 								"source": {
-									"name": "_UpVotes",
+									"name": "_Score",
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_UpVotes",
+									"name": "_Score",
 									"type": "Int64"
 								}
 							},
 							{
 								"source": {
-									"name": "_Views",
-									"type": "Int64"
+									"name": "_UserDisplayName",
+									"type": "String"
 								},
 								"sink": {
-									"name": "_Views",
-									"type": "Int64"
+									"name": "_UserDisplayName",
+									"type": "String"
 								}
 							},
 							{
 								"source": {
-									"name": "_WebsiteUrl",
-									"type": "String"
+									"name": "_UserId",
+									"type": "Int64"
 								},
 								"sink": {
-									"name": "_WebsiteUrl",
-									"type": "String"
+									"name": "_UserId",
+									"type": "Int64"
 								}
 							}
 						]
@@ -343,7 +283,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "CDMUsers",
+						"referenceName": "CDMComments",
 						"type": "DatasetReference"
 					}
 				]
