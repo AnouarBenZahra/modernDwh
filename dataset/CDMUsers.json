@@ -1,0 +1,27 @@
+{
+	"name": "CDMUsers",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "PowerBI_CDM",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "CDM"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Users.csv",
+				"folderPath": "Custom/StackOverflow",
+				"fileSystem": "powerbi"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

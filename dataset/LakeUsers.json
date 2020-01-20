@@ -1,24 +1,79 @@
 {
-	"name": "CommentsCDM",
+	"name": "LakeUsers",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "PowerBI_CDM",
+			"referenceName": "ABFS_Lake",
 			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "CDM"
 		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "Comment.csv",
-				"folderPath": "Custom/DemoCDM",
-				"fileSystem": "powerbi"
+				"folderPath": "Curated/20191224/Users.csv",
+				"fileSystem": "lake"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "_AboutMe",
+				"type": "String"
+			},
+			{
+				"name": "_AccountId",
+				"type": "String"
+			},
+			{
+				"name": "_CreationDate",
+				"type": "String"
+			},
+			{
+				"name": "_DisplayName",
+				"type": "String"
+			},
+			{
+				"name": "_DownVotes",
+				"type": "String"
+			},
+			{
+				"name": "_Id",
+				"type": "String"
+			},
+			{
+				"name": "_LastAccessDate",
+				"type": "String"
+			},
+			{
+				"name": "_Location",
+				"type": "String"
+			},
+			{
+				"name": "_ProfileImageUrl",
+				"type": "String"
+			},
+			{
+				"name": "_Reputation",
+				"type": "String"
+			},
+			{
+				"name": "_UpVotes",
+				"type": "String"
+			},
+			{
+				"name": "_Views",
+				"type": "String"
+			},
+			{
+				"name": "_WebsiteUrl",
+				"type": "String"
+			}
+		]
 	}
 }
