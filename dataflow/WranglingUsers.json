@@ -1,0 +1,32 @@
+{
+	"name": "WranglingUsers",
+	"properties": {
+		"type": "WranglingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"name": "LakeUsers",
+					"script": "",
+					"dataset": {
+						"referenceName": "LakeUsers",
+						"type": "DatasetReference"
+					},
+					"typeProperties": {
+						"readMode": null
+					}
+				}
+			],
+			"sinks": [
+				{
+					"name": "Sink1",
+					"dataset": {
+						"referenceName": "CDMUsers",
+						"type": "DatasetReference"
+					},
+					"script": "sink(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> Sink1"
+				}
+			],
+			"script": "section Section1;\r\nshared LakeUsers = let\r\n  AdfDoc = AzureStorage.DataLakeContents(\"https://meetuptunis.dfs.core.windows.net/lake/Curated/20191224/Users.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \"|\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = LakeUsers,\r\n  #\"Changed column type\" = Table.TransformColumnTypes(Source, {{\"_CreationDate\", type datetime}}),\r\n  #\"Removed errors\" = Table.RemoveRowsWithErrors(#\"Changed column type\"),\r\n  #\"Filtered rows\" = Table.SelectRows(#\"Removed errors\", each ([_DisplayName] <> \"\"))\r\nin\r\n  #\"Filtered rows\";\r\n"
+		}
+	}
+}

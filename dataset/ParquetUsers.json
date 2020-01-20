@@ -1,79 +1,72 @@
 {
-	"name": "LakeUsers",
+	"name": "ParquetUsers",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ABFS_Lake",
+			"referenceName": "AzureBlobStorage1",
 			"type": "LinkedServiceReference"
 		},
-		"folder": {
-			"name": "CDM"
-		},
 		"annotations": [],
-		"type": "DelimitedText",
+		"type": "Parquet",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobFSLocation",
-				"fileName": "Users.csv",
-				"folderPath": "Curated/20191224",
-				"fileSystem": "lake"
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "Curated/20191224/Users.parquet",
+				"container": "lake"
 			},
-			"columnDelimiter": "|",
-			"escapeChar": "\\",
-			"firstRowAsHeader": true,
-			"quoteChar": "\""
+			"compressionCodec": "snappy"
 		},
 		"schema": [
 			{
 				"name": "_AboutMe",
-				"type": "String"
+				"type": "UTF8"
 			},
 			{
 				"name": "_AccountId",
-				"type": "String"
+				"type": "INT64"
 			},
 			{
 				"name": "_CreationDate",
-				"type": "String"
+				"type": "UTF8"
 			},
 			{
 				"name": "_DisplayName",
-				"type": "String"
+				"type": "UTF8"
 			},
 			{
 				"name": "_DownVotes",
-				"type": "String"
+				"type": "INT64"
 			},
 			{
 				"name": "_Id",
-				"type": "String"
+				"type": "INT64"
 			},
 			{
 				"name": "_LastAccessDate",
-				"type": "String"
+				"type": "UTF8"
 			},
 			{
 				"name": "_Location",
-				"type": "String"
+				"type": "UTF8"
 			},
 			{
 				"name": "_ProfileImageUrl",
-				"type": "String"
+				"type": "UTF8"
 			},
 			{
 				"name": "_Reputation",
-				"type": "String"
+				"type": "INT64"
 			},
 			{
 				"name": "_UpVotes",
-				"type": "String"
+				"type": "INT64"
 			},
 			{
 				"name": "_Views",
-				"type": "String"
+				"type": "INT64"
 			},
 			{
 				"name": "_WebsiteUrl",
-				"type": "String"
+				"type": "UTF8"
 			}
 		]
 	}

@@ -1,0 +1,178 @@
+{
+	"name": "CDM - Parquet - CSV",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy - CSV",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFileName": "*.parquet"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings",
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "_AboutMe",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_AboutMe"
+								}
+							},
+							{
+								"source": {
+									"name": "_AccountId",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_AccountId"
+								}
+							},
+							{
+								"source": {
+									"name": "_CreationDate",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_CreationDate"
+								}
+							},
+							{
+								"source": {
+									"name": "_DisplayName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_DisplayName"
+								}
+							},
+							{
+								"source": {
+									"name": "_DownVotes",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_DownVotes"
+								}
+							},
+							{
+								"source": {
+									"name": "_Id",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_Id"
+								}
+							},
+							{
+								"source": {
+									"name": "_LastAccessDate",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_LastAccessDate"
+								}
+							},
+							{
+								"source": {
+									"name": "_Location",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_Location"
+								}
+							},
+							{
+								"source": {
+									"name": "_ProfileImageUrl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_ProfileImageUrl"
+								}
+							},
+							{
+								"source": {
+									"name": "_Reputation",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_Reputation"
+								}
+							},
+							{
+								"source": {
+									"name": "_UpVotes",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_UpVotes"
+								}
+							},
+							{
+								"source": {
+									"name": "_Views",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_Views"
+								}
+							},
+							{
+								"source": {
+									"name": "_WebsiteUrl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_WebsiteUrl"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ParquetUsers",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "LakeUsers",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}
