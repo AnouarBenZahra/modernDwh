@@ -1,5 +1,5 @@
 {
-	"name": "CDMUsers",
+	"name": "CDMComments",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "PowerBI_CDM",
@@ -13,7 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "Users.csv",
+				"fileName": "Comments.csv",
 				"folderPath": "Custom/StackOverflow",
 				"fileSystem": "powerbi"
 			},

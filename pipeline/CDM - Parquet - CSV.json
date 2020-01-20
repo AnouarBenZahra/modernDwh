@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy - CSV",
+				"name": "Copy - Users CSV",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -41,20 +41,12 @@
 						"mappings": [
 							{
 								"source": {
-									"name": "_AboutMe",
-									"type": "String"
-								},
-								"sink": {
-									"name": "_AboutMe"
-								}
-							},
-							{
-								"source": {
 									"name": "_AccountId",
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_AccountId"
+									"name": "_AccountId",
+									"type": "Int64"
 								}
 							},
 							{
@@ -63,7 +55,8 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "_CreationDate"
+									"name": "_CreationDate",
+									"type": "String"
 								}
 							},
 							{
@@ -72,7 +65,8 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "_DisplayName"
+									"name": "_DisplayName",
+									"type": "String"
 								}
 							},
 							{
@@ -81,7 +75,8 @@
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_DownVotes"
+									"name": "_DownVotes",
+									"type": "Int64"
 								}
 							},
 							{
@@ -90,7 +85,8 @@
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_Id"
+									"name": "_Id",
+									"type": "Int64"
 								}
 							},
 							{
@@ -99,7 +95,8 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "_LastAccessDate"
+									"name": "_LastAccessDate",
+									"type": "String"
 								}
 							},
 							{
@@ -108,7 +105,8 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "_Location"
+									"name": "_Location",
+									"type": "String"
 								}
 							},
 							{
@@ -117,7 +115,8 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "_ProfileImageUrl"
+									"name": "_ProfileImageUrl",
+									"type": "String"
 								}
 							},
 							{
@@ -126,7 +125,8 @@
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_Reputation"
+									"name": "_Reputation",
+									"type": "Int64"
 								}
 							},
 							{
@@ -135,7 +135,8 @@
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_UpVotes"
+									"name": "_UpVotes",
+									"type": "Int64"
 								}
 							},
 							{
@@ -144,7 +145,8 @@
 									"type": "Int64"
 								},
 								"sink": {
-									"name": "_Views"
+									"name": "_Views",
+									"type": "Int64"
 								}
 							},
 							{
@@ -153,7 +155,8 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "_WebsiteUrl"
+									"name": "_WebsiteUrl",
+									"type": "String"
 								}
 							}
 						]
@@ -167,7 +170,180 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "LakeUsers",
+						"referenceName": "CDMUsers",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Copy - Comments CSV",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFileName": "*.parquet"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings",
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ""
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "_AccountId",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_AccountId",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_CreationDate",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_CreationDate",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_DisplayName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_DisplayName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_DownVotes",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_DownVotes",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_Id",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_Id",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_LastAccessDate",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_LastAccessDate",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_Location",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_Location",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_ProfileImageUrl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_ProfileImageUrl",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "_Reputation",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_Reputation",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_UpVotes",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_UpVotes",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_Views",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "_Views",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "_WebsiteUrl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "_WebsiteUrl",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ParquetComments",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "CDMUsers",
 						"type": "DatasetReference"
 					}
 				]
