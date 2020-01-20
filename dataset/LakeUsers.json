@@ -16,7 +16,7 @@
 				"folderPath": "Curated/20191224/Users.csv",
 				"fileSystem": "lake"
 			},
-			"columnDelimiter": ",",
+			"columnDelimiter": "\u0000",
 			"escapeChar": "\\",
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
