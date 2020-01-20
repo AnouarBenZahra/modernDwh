@@ -26,7 +26,7 @@
 					"name": "Filter1"
 				}
 			],
-			"script": "\n\nsource(output(\n\t\t{_AboutMe} as string,\n\t\t{_AccountId} as long,\n\t\t{_CreationDate} as string,\n\t\t{_DisplayName} as string,\n\t\t{_DownVotes} as long,\n\t\t{_Id} as long,\n\t\t{_LastAccessDate} as string,\n\t\t{_Location} as string,\n\t\t{_ProfileImageUrl} as string,\n\t\t{_Reputation} as long,\n\t\t{_UpVotes} as long,\n\t\t{_Views} as long,\n\t\t{_WebsiteUrl} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> User\nUser filter(instr({_Location},'\\r\\n') == 0) ~> Filter1\nFilter1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['Users.csv'],\n\tpartitionBy('hash', 1)) ~> sink1"
+			"script": "\n\nsource(output(\n\t\t{_AboutMe} as string,\n\t\t{_AccountId} as long,\n\t\t{_CreationDate} as string,\n\t\t{_DisplayName} as string,\n\t\t{_DownVotes} as long,\n\t\t{_Id} as long,\n\t\t{_LastAccessDate} as string,\n\t\t{_Location} as string,\n\t\t{_ProfileImageUrl} as string,\n\t\t{_Reputation} as long,\n\t\t{_UpVotes} as long,\n\t\t{_Views} as long,\n\t\t{_WebsiteUrl} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> User\nUser filter(instr({_Location},'\\r\\n') == 0) ~> Filter1\nFilter1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['Users.csv'],\n\tmapColumn(\n\t\t{_AccountId},\n\t\t{_CreationDate},\n\t\t{_DisplayName},\n\t\t{_DownVotes},\n\t\t{_Id},\n\t\t{_LastAccessDate},\n\t\t{_Location},\n\t\t{_ProfileImageUrl},\n\t\t{_Reputation},\n\t\t{_UpVotes},\n\t\t{_Views},\n\t\t{_WebsiteUrl}\n\t),\n\tpartitionBy('hash', 1)) ~> sink1"
 		}
 	}
 }
