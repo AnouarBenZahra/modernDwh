@@ -3,8 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "WranglingUsers",
-				"type": "ExecuteWranglingDataflow",
+				"name": "CMDUsers",
+				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
@@ -16,8 +16,12 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "WranglingUsers",
+						"referenceName": "CMDUsers",
 						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
 					}
 				}
 			}

@@ -13,7 +13,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "Users.csv",
 				"folderPath": "Custom/StackOverflow",
 				"fileSystem": "powerbi"
 			},
